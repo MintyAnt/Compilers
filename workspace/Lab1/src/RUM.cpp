@@ -1,272 +1,576 @@
 #include <vector>
 #include <iostream>
 #include <stdarg.h>
+#include <map>
+#include <intrin.h>
 
 using namespace std;
 
-/* C++ version of RUM starter code. No destructors (yet), so it leaks memory like a sieve. */
-
-class RUM
-{
-
-};
-
+// ahhhh
+// cuz they aint defined yet, the horrors of one file to rull all classes
+class Left;
+class Right;
+class Increment;
+class Decrement;
+class Input;
+class Output;
+class Loop;
+class Sequence;
+class Program;
 class Visitor;
+class ProcedureDefinition;
+class ProcedureInvocation;
+class Repetition;
+class Strings;
+class Breakpoint;
+class Interpreter;
 
-class Node
-{
-	public:
-		virtual void accept(Visitor * visitor) = 0;
-};
+//@TODO fix memory leaks
 
-class Left : public Node
-{
-	public:
-		void accept(Visitor * visitor);
-};
-class Right : public Node
-{
-	public:
-		void accept(Visitor * visitor);
-};
-class Increment : public Node
-{
-	public:
-		void accept(Visitor * visitor);
-};
-class Decrement : public Node
-{
-	public:
-		void accept(Visitor * visitor);
-};
-class Input : public Node
-{
-	public:
-		void accept(Visitor * visitor);
-};
-class Output : public Node
-{
-	public:
-		void accept(Visitor * visitor);
-};
-class Loop : public Node
-{
-	public:
-		Node * child;
-		Loop(Node * child) : child (child) {}
-		void accept(Visitor * visitor);
-};
-class Sequence : public Node {
-	public:
-		vector<Node *> children;
-		Sequence(Node * child, ...);
-		void accept(Visitor * visitor);
-};
-class Program : public Node {
-	public:
-		Node * child;
-		Program(Node * child) : child (child) {}
-		void accept(Visitor * visitor);
-};
-
+//----------------------------------------------------------------------------------------------------//
 class Visitor
 {
-	public:
-		virtual void visit(Left * node) = 0;
-		virtual void visit(Right * node) = 0;
-		virtual void visit(Increment * node) = 0;
-		virtual void visit(Decrement * node) = 0;
-		virtual void visit(Input * node) = 0;
-		virtual void visit(Output * node) = 0;
-		virtual void visit(Loop * node) = 0;
-		virtual void visit(Sequence * node) = 0;
-		virtual void visit(Program * node) = 0;
+public:
+	// BRAIN F
+	virtual void visit(Left* inNode) = 0;
+	virtual void visit(Right* inNode) = 0;
+	virtual void visit(Increment* inNode) = 0;
+	virtual void visit(Decrement* inNode) = 0;
+	virtual void visit(Input* inNode) = 0;
+	virtual void visit(Output* inNode) = 0;
+	virtual void visit(Loop* inNode) = 0;
+	virtual void visit(Sequence* inNode) = 0;
+	virtual void visit(Program* inNode) = 0;
+
+	// RUM
+	virtual void visit(ProcedureDefinition* inNode) = 0;
+	virtual void visit(ProcedureInvocation* inNode) = 0;
+	virtual void visit(Repetition* inNode) = 0;
+	virtual void visit(Strings* inNode) = 0;
+	virtual void visit(Breakpoint* inNode) = 0;
 };
 
-Sequence::Sequence(Node * child, ...)
+//----------------------------------------------------------------------------------------------------//
+class Node
 {
-	Node * next_child = NULL;
-	va_list list;
-	children.push_back(child);
-    va_start(list, child);
-    while ((next_child = va_arg(list, Node *)) != NULL)
-    {
-    	children.push_back(next_child);
-    }
-    va_end(list);
-}
-
-void Left::accept(Visitor * visitor)
-{
-	visitor->visit(this);
-}
-
-void Right::accept(Visitor * visitor)
-{
-	visitor->visit(this);
-}
-
-void Increment::accept(Visitor * visitor)
-{
-	visitor->visit(this);
-}
-
-void Decrement::accept(Visitor * visitor)
-{
-	visitor->visit(this);
-}
-
-void Input::accept(Visitor * visitor)
-{
-	visitor->visit(this);
-}
-
-void Output::accept(Visitor * visitor)
-{
-	visitor->visit(this);
-}
-
-void Loop::accept(Visitor * visitor)
-{
-	visitor->visit(this);
-}
-
-void Sequence::accept(Visitor * visitor)
-{
-	visitor->visit(this);
-}
-
-void Program::accept(Visitor * visitor)
-{
-	visitor->visit(this);
-}
-
-class Printer : public Visitor {
-	public:
-		void visit(Left * node);
-		void visit(Right * node);
-		void visit(Increment * node);
-		void visit(Decrement * node);
-		void visit(Input * node);
-		void visit(Output * node);
-		void visit(Loop * node);
-		void visit(Sequence * node);
-		void visit(Program * node);
+public:
+	virtual void accept(Visitor* inVisitor) = 0;
 };
 
-void Printer::visit(Left * node)
+//----------------------------------------------------------------------------------------------------//
+class Left : public Node
 {
-	cout << '<';
-}
-
-void Printer::visit(Right * node)
-{
-	cout << '>';
-}
-
-void Printer::visit(Increment * node)
-{
-	cout << '+';
-}
-void Printer::visit(Decrement * node)
-{
-	cout << '-';
-}
-void Printer::visit(Input * node)
-{
-	cout << ',';
-}
-void Printer::visit(Output * node)
-{
-	cout << '.';
-}
-void Printer::visit(Loop * node)
-{
-	cout << '[';
-	node->child->accept(this);
-	cout << ']';
-}
-void Printer::visit(Sequence * node)
-{
-	for (vector<Node *>::iterator child = node->children.begin(); child != node->children.end(); ++child)
+public:
+	void accept(Visitor* inVisitor)
 	{
-		(*child)->accept(this);
+		inVisitor->visit(this);
 	}
-}
-void Printer::visit(Program * node)
-{
-	node->child->accept(this);
-}
-
-class Interpreter : public Visitor {
-	char cell[30000];
-	unsigned short pointer;
-	public:
-		void visit(Left * node);
-		void visit(Right * node);
-		void visit(Increment * node);
-		void visit(Decrement * node);
-		void visit(Input * node);
-		void visit(Output * node);
-		void visit(Loop * node);
-		void visit(Sequence * node);
-		void visit(Program * node);
 };
 
-void Interpreter::visit(Left * node)
+//----------------------------------------------------------------------------------------------------//
+class Right : public Node
 {
-	pointer++;
-}
-
-void Interpreter::visit(Right * node)
-{
-	pointer--;
-}
-
-void Interpreter::visit(Increment * node)
-{
-	cell[pointer]++;
-}
-void Interpreter::visit(Decrement * node)
-{
-	cell[pointer]--;
-}
-void Interpreter::visit(Input * node)
-{
-	cin >> cell[pointer];
-}
-void Interpreter::visit(Output * node)
-{
-	cout << cell[pointer];
-}
-void Interpreter::visit(Loop * node)
-{
-	while (cell[pointer])
+public:
+	void accept(Visitor* inVisitor)
 	{
-		node->child->accept(this);
+		inVisitor->visit(this);
 	}
-}
-void Interpreter::visit(Sequence * node)
-{
-	for (vector<Node *>::iterator child = node->children.begin(); child != node->children.end(); ++child)
-	{
-		(*child)->accept(this);
-	}
-}
-void Interpreter::visit(Program * node)
-{
-	for (int i = 0; i < 30000; i++) cell[i] = 0;
-	pointer = 0;
-	node->child->accept(this);
-}
+};
 
+//----------------------------------------------------------------------------------------------------//
+class Increment : public Node
+{
+public:
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Decrement : public Node
+{
+public:
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Input : public Node
+{
+public:
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Output : public Node
+{
+public:
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Loop : public Node
+{
+public:
+	Node* mChild;
+
+public:
+	Loop(Node* inChild)
+		: mChild(inChild) 
+	{}
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Sequence : public Node
+{
+public:
+	vector<Node*> mChildren;
+
+public:
+	//----------------------------------------------------------------------------------------------------//
+	Sequence(vector<Node*>& inChildren)
+	{
+		Node* next_child = NULL;
+		vector<Node*>::iterator childIter;
+		for (childIter = inChildren.begin(); childIter != inChildren.end(); ++childIter)
+		{
+			next_child = (*childIter);
+			mChildren.push_back(next_child);
+		}
+	}
+	//----------------------------------------------------------------------------------------------------//
+	Sequence(Node* inChild, ...)
+	{
+		Node* next_child = NULL;
+		va_list list;
+		mChildren.push_back(inChild);
+		va_start(list, inChild);
+		while ((next_child = va_arg(list, Node*)) != NULL)
+		{
+			mChildren.push_back(next_child);
+		}
+		va_end(list);
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Program : public Node
+{
+public:
+	Node* mChild;
+
+public:
+	//----------------------------------------------------------------------------------------------------//
+	Program(Node* inChild) 
+		: mChild(inChild) 
+	{}
+	//----------------------------------------------------------------------------------------------------//
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class ProcedureDefinition : public Node
+{
+public:
+	Sequence* mProcedureSequence;
+
+public:
+	//----------------------------------------------------------------------------------------------------//
+	ProcedureDefinition(Sequence* inProcedureSequence)
+		: mProcedureSequence(inProcedureSequence)
+	{}
+	//----------------------------------------------------------------------------------------------------//
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class ProcedureInvocation : public Node
+{
+public:
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Repetition : public Node
+{
+public:
+	Node* mRepeatNode;
+	int mNumRepeats;
+	
+public:
+	//----------------------------------------------------------------------------------------------------//
+	Repetition(Node* inRepeatNode, int inNumRepeats)
+		: mRepeatNode(inRepeatNode)
+		, mNumRepeats(inNumRepeats)
+	{}
+	//----------------------------------------------------------------------------------------------------//
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Strings : public Node
+{
+public:
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Breakpoint : public Node
+{
+public:
+	void accept(Visitor* inVisitor)
+	{
+		inVisitor->visit(this);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Printer : public Visitor
+{
+public:
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Left* inNode)
+	{
+		cout << '<';
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Right* inNode)
+	{
+		cout << '>';
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Increment* inNode)
+	{
+		cout << '+';
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Decrement* inNode)
+	{
+		cout << '-';
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Input* inNode)
+	{
+		cout << ',';
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Output* inNode)
+	{
+		cout << '.';
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Loop* inNode)
+	{
+		cout << '[';
+		inNode->mChild->accept(this);
+		cout << ']';
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Sequence* inNode)
+	{
+		vector<Node*>::iterator childIter;
+		for (childIter = inNode->mChildren.begin(); childIter != inNode->mChildren.end(); ++childIter)
+		{
+			Node* currentChild = (*childIter);
+			currentChild->accept(this);
+		}
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Program* inNode)
+	{
+		inNode->mChild->accept(this);
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(ProcedureDefinition* inNode)
+	{
+		cout << '(';
+		inNode->accept(this);
+		cout << ')';
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(ProcedureInvocation* inNode)
+	{
+		cout << ':';
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Repetition* inNode)
+	{
+		cout << inNode->mNumRepeats;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Strings* inNode)
+	{
+
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Breakpoint* inNode)
+	{
+		cout << '!';
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Procedure
+{
+public:
+	Sequence* mProcedureSequence;
+	Procedure(Sequence* inSequence)
+		: mProcedureSequence(inSequence)
+	{}
+	void execute(Visitor* inInterperter)
+	{
+		mProcedureSequence->accept(inInterperter);
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Interpreter : public Visitor
+{
+public:
+	char mCell[30000];
+	unsigned short mPointer;
+	map<unsigned short, Procedure*> mProcedures;
+
+public:
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Left* inNode)
+	{
+		mPointer--;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Right* inNode)
+	{
+		mPointer++;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Increment* inNode)
+	{
+		mCell[mPointer]++;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Decrement* inNode)
+	{
+		mCell[mPointer]--;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Input* inNode)
+	{
+		cin >> mCell[mPointer];
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Output* inNode)
+	{
+		cout << mCell[mPointer];
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Loop* inNode)
+	{
+		while (mCell[mPointer])
+		{
+			inNode->mChild->accept(this);
+		}
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Sequence* inNode)
+	{
+		vector<Node *>::iterator childIter;
+		for (childIter = inNode->mChildren.begin(); childIter != inNode->mChildren.end(); ++childIter)
+		{
+			Node* currentChild = (*childIter);
+			currentChild->accept(this);
+		}
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Program* inNode)
+	{
+		for (int i = 0; i < 30000; i++)
+		{
+			mCell[i] = 0;
+		}
+
+		mPointer = 0;
+		inNode->mChild->accept(this);
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(ProcedureDefinition* inNode)
+	{
+		// Set this procedures children as the current pointers address
+		mProcedures[mPointer] = new Procedure(inNode->mProcedureSequence);
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(ProcedureInvocation* inNode)
+	{
+		mProcedures[mCell[mPointer]]->execute(this);
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Repetition* inNode)
+	{
+		for (int repeatIndex = 0; repeatIndex < inNode->mNumRepeats; ++repeatIndex)
+		{
+			inNode->mRepeatNode->accept(this);
+		}
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Strings* inNode)
+	{
+
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Breakpoint* inNode)
+	{
+		__debugbreak();
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+class Compiler : public Visitor
+{
+
+};
+
+//----------------------------------------------------------------------------------------------------//
+class RUM
+{
+public:
+	//----------------------------------------------------------------------------------------------------//
+	Sequence* ParseSequence(string inSource)
+	{
+		static unsigned int sourceIndex = 0;
+		vector<Node*> sequence;
+		while (sourceIndex < inSource.size())
+		{
+			char command = inSource[sourceIndex];
+			sourceIndex++;
+
+			switch (command)
+			{
+			case '>':
+				sequence.push_back(new Right());
+				break;
+			case '<':
+				sequence.push_back(new Left());
+				break;
+			case '+':
+				sequence.push_back(new Increment());
+				break;
+			case '-':
+				sequence.push_back(new Decrement());
+				break;
+			case '.':
+				sequence.push_back(new Output());
+				break;
+			case ',':
+				sequence.push_back(new Input());
+				break;
+			case '[':
+				sequence.push_back(new Loop(ParseSequence(inSource)));
+				break;
+			case ']':
+				return new Sequence(sequence);
+			case '(':
+				sequence.push_back(new ProcedureDefinition(ParseSequence(inSource)));
+				break;
+			case ')':
+				return new Sequence(sequence);
+				break;
+			case ':':
+				sequence.push_back(new ProcedureInvocation());
+				break;
+			case '0': case '1': case '2': case '3': case '4':
+			case '5': case '6': case '7': case '8': case '9':
+				{
+					string numberString;
+					numberString.push_back(command);
+					bool bAnotherNumber = true;
+
+					int nextIndex = sourceIndex;
+					while (bAnotherNumber)
+					{
+						nextIndex++;
+						if (nextIndex < inSource.size())
+						{
+							char nextCommand = inSource[nextIndex];
+							if (nextCommand >= 48 && nextCommand <= 57)
+							{
+								numberString.push_back(nextCommand);
+								continue;
+							}
+						}
+						bAnotherNumber = false;
+					}
+
+					int numberStringAsNumber = atoi(numberString.c_str());
+					sourceIndex = nextIndex + 1;
+					Sequence* repeatSequence = ParseSequence(inSource);
+					Repetition* repetition = new Repetition(repeatSequence, numberStringAsNumber);
+					sequence.push_back(repetition);
+				}
+				break;
+			case '!':
+				sequence.push_back(new Breakpoint());
+				break;
+			case '#':
+				break;
+			}
+		}
+		return new Sequence(sequence);
+	}
+
+	//----------------------------------------------------------------------------------------------------//
+	Program* Parse(string inSource)
+	{
+		return new Program(ParseSequence(inSource));
+	}
+};
+
+//----------------------------------------------------------------------------------------------------//
+// Main //
+//----------------------------------------------------------------------------------------------------//
 int main(int argc, char** argv)
 {
-	Program * program = new Program(new Sequence(
-		new Increment(), new Loop(
-			new Sequence(new Output(), new Increment(), NULL)), NULL));
-	Printer * printer = new Printer();
-	printer->visit(program);
-	Interpreter * interpreter = new Interpreter();
-	interpreter->visit(program);
+	RUM* rum = new RUM();
+	// Brainfuck
+	//Program* program = rum->Parse("++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.");
+	// Rum, just procedures
+	Program* program = rum->Parse("(++++++++++<[>+>+<<-]>>[<<+>>-])>::::::::::::::<<<<<<<--------.>>>---------.+++++++..>---------.<<<<<<<------.<--------.>>>>>---.>>>.+++.<.--------.<<<<<<<+.");
+	// Rum, Hello world with repetitions
+	//Program* program = rum->Parse("10+[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.");
+	// Rum, procedures, strings, and repetitions
+	//const string rawString = R"DELIM(+(,[.,])+(,[32-.,])"hello":[-]+", ":[-]++"world":)DELIM";
+	//Program* program = rum->Parse(rawString);
+	Interpreter* interperter = new Interpreter();
+	program->accept(interperter);
 }
