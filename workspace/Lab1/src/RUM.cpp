@@ -466,7 +466,7 @@ class RUM
 {
 public:
 	//----------------------------------------------------------------------------------------------------//
-	Sequence* ParseSequence(string inSource)
+	Sequence* ParseSequence(string inSource, bool inbJustParseOne = false)
 	{
 		static unsigned int sourceIndex = 0;
 		vector<Node*> sequence;
@@ -502,7 +502,7 @@ public:
 				return new Sequence(sequence);
 			case '(':
 				sequence.push_back(new ProcedureDefinition(ParseSequence(inSource)));
-				break;
+				continue;
 			case ')':
 				return new Sequence(sequence);
 				break;
@@ -519,12 +519,12 @@ public:
 					int nextIndex = sourceIndex;
 					while (bAnotherNumber)
 					{
-						nextIndex++;
 						if (nextIndex < inSource.size())
 						{
 							char nextCommand = inSource[nextIndex];
 							if (nextCommand >= 48 && nextCommand <= 57)
 							{
+								nextIndex++;
 								numberString.push_back(nextCommand);
 								continue;
 							}
@@ -533,8 +533,10 @@ public:
 					}
 
 					int numberStringAsNumber = atoi(numberString.c_str());
-					sourceIndex = nextIndex + 1;
-					Sequence* repeatSequence = ParseSequence(inSource);
+					sourceIndex = nextIndex;
+					//@TODO parse out entire sequences, not just primitives.
+					//Sequence* repeatSequence = ParseSequence(inSource);
+					Sequence* repeatSequence = ParseSequence(inSource, true);
 					Repetition* repetition = new Repetition(repeatSequence, numberStringAsNumber);
 					sequence.push_back(repetition);
 				}
@@ -545,6 +547,9 @@ public:
 			case '#':
 				break;
 			}
+
+			if (inbJustParseOne) 
+				return new Sequence(sequence);
 		}
 		return new Sequence(sequence);
 	}
@@ -565,9 +570,9 @@ int main(int argc, char** argv)
 	// Brainfuck
 	//Program* program = rum->Parse("++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.");
 	// Rum, just procedures
-	Program* program = rum->Parse("(++++++++++<[>+>+<<-]>>[<<+>>-])>::::::::::::::<<<<<<<--------.>>>---------.+++++++..>---------.<<<<<<<------.<--------.>>>>>---.>>>.+++.<.--------.<<<<<<<+.");
+	//Program* program = rum->Parse("(++++++++++<[>+>+<<-]>>[<<+>>-])>::::::::::::::<<<<<<<--------.>>>---------.+++++++..>---------.<<<<<<<------.<--------.>>>>>---.>>>.+++.<.--------.<<<<<<<+.");
 	// Rum, Hello world with repetitions
-	//Program* program = rum->Parse("10+[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.");
+	Program* program = rum->Parse("10+[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.");
 	// Rum, procedures, strings, and repetitions
 	//const string rawString = R"DELIM(+(,[.,])+(,[32-.,])"hello":[-]+", ":[-]++"world":)DELIM";
 	//Program* program = rum->Parse(rawString);
