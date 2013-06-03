@@ -241,6 +241,13 @@ public:
 class Strings : public Node
 {
 public:
+	string mString;
+public:
+	//----------------------------------------------------------------------------------------------------//
+	Strings(const string inString)
+		: mString(inString)
+	{}
+	//----------------------------------------------------------------------------------------------------//
 	void accept(Visitor* inVisitor)
 	{
 		inVisitor->visit(this);
@@ -446,7 +453,7 @@ public:
 	//----------------------------------------------------------------------------------------------------//
 	void visit(Strings* inNode)
 	{
-
+		cout << inNode->mString.c_str();
 	}
 	//----------------------------------------------------------------------------------------------------//
 	void visit(Breakpoint* inNode)
@@ -546,6 +553,20 @@ public:
 				break;
 			case '#':
 				break;
+			case '\"':
+				{
+					string parsedString;
+					while (inSource[sourceIndex] != '\"')
+					{
+						char nextCharacter = inSource[sourceIndex];
+						sourceIndex++;
+						parsedString.push_back(nextCharacter);
+					}
+					sourceIndex++;
+					parsedString.push_back('\0');
+					sequence.push_back(new Strings(parsedString));
+				}
+				break;
 			}
 
 			if (inbJustParseOne) 
@@ -572,10 +593,15 @@ int main(int argc, char** argv)
 	// Rum, just procedures
 	//Program* program = rum->Parse("(++++++++++<[>+>+<<-]>>[<<+>>-])>::::::::::::::<<<<<<<--------.>>>---------.+++++++..>---------.<<<<<<<------.<--------.>>>>>---.>>>.+++.<.--------.<<<<<<<+.");
 	// Rum, Hello world with repetitions
-	Program* program = rum->Parse("10+[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.");
+	//Program* program = rum->Parse("10+[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+.>.");
+	// Rum, strings
+	Program* program = rum->Parse("\"helloworld\",[--------------------------------.,]");
 	// Rum, procedures, strings, and repetitions
 	//const string rawString = R"DELIM(+(,[.,])+(,[32-.,])"hello":[-]+", ":[-]++"world":)DELIM";
+	//string rawString = "+(,[.,])+(,[32-.,])\"hello\":[-]+\", \":[-]++\"world\":"
 	//Program* program = rum->Parse(rawString);
+
+
 	Interpreter* interperter = new Interpreter();
 	program->accept(interperter);
 }
