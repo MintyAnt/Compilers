@@ -3,6 +3,9 @@
 #include <stdarg.h>
 #include <map>
 #include <intrin.h>
+#include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -370,6 +373,7 @@ public:
 	char mCell[30000];
 	unsigned short mPointer;
 	map<unsigned short, Procedure*> mProcedures;
+	vector<char> mBufferStack;
 
 public:
 	//----------------------------------------------------------------------------------------------------//
@@ -395,7 +399,14 @@ public:
 	//----------------------------------------------------------------------------------------------------//
 	void visit(Input* inNode)
 	{
-		cin >> mCell[mPointer];
+		if (mBufferStack.empty())
+			cin >> mCell[mPointer];
+		else
+		{
+			char topChar = mBufferStack[mBufferStack.size()-1];
+			mBufferStack.pop_back();
+			mCell[mPointer] = topChar;
+		}
 	}
 	//----------------------------------------------------------------------------------------------------//
 	void visit(Output* inNode)
@@ -453,7 +464,7 @@ public:
 	//----------------------------------------------------------------------------------------------------//
 	void visit(Strings* inNode)
 	{
-		cout << inNode->mString.c_str();
+		mBufferStack.insert(mBufferStack.end(), inNode->mString.rbegin(), inNode->mString.rend());
 	}
 	//----------------------------------------------------------------------------------------------------//
 	void visit(Breakpoint* inNode)
@@ -465,7 +476,161 @@ public:
 //----------------------------------------------------------------------------------------------------//
 class Compiler : public Visitor
 {
+public:
+	ofstream mOutputFile;
+	int mCurrentTabAmmount;
 
+public:
+	//----------------------------------------------------------------------------------------------------//
+	Compiler()
+		: mOutputFile("compiled.py")
+		, mCurrentTabAmmount(0)
+	{}
+	//----------------------------------------------------------------------------------------------------//
+	string GetTabString()
+	{
+		string newString;
+		const int numSpacesInTab = 4;
+		for (int x = 0; x < mCurrentTabAmmount * numSpacesInTab; x++)
+		{
+			newString.append(" ");
+		}
+
+		return newString;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Left* inNode)
+	{
+		mOutputFile << GetTabString() << "pointer -= 1" << endl;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Right* inNode)
+	{
+		mOutputFile << GetTabString() << "pointer += 1" << endl;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Increment* inNode)
+	{
+		mOutputFile << GetTabString() << "cells[pointer] = chr(ord(cells[pointer]) + 1)" << endl;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Decrement* inNode)
+	{
+		mOutputFile << GetTabString() << "cells[pointer] = chr(ord(cells[pointer]) - 1)" << endl;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Input* inNode)
+	{
+		mOutputFile << GetTabString() << "if (not characterBuffer):" << endl;
+		mCurrentTabAmmount++;
+		mOutputFile << GetTabString() << "cells[pointer] = raw_input()" << endl;
+		mCurrentTabAmmount--;
+
+		mOutputFile << GetTabString() << "else:" << endl;
+		mCurrentTabAmmount++;
+		mOutputFile << GetTabString() << "cells[pointer] = characterBuffer.pop()" << endl;
+		mCurrentTabAmmount--;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Output* inNode)
+	{
+		mOutputFile << GetTabString() << "print(cells[pointer])" << endl;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Loop* inNode)
+	{
+		mOutputFile << GetTabString() << "while (cells[pointer]):" << endl;
+		mCurrentTabAmmount++;
+		inNode->mChild->accept(this);
+		mCurrentTabAmmount--;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Sequence* inNode)
+	{
+		vector<Node *>::iterator childIter;
+		for (childIter = inNode->mChildren.begin(); childIter != inNode->mChildren.end(); ++childIter)
+		{
+			Node* currentChild = (*childIter);
+			currentChild->accept(this);
+		}
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Program* inNode)
+	{
+		// Imports
+		mOutputFile << "" << endl;
+
+		/*
+		// Procedures
+		mOutputFile << "class Procedure:" << endl;
+
+		class Procedure
+		{
+		public:
+		Sequence* mProcedureSequence;
+		Procedure(Sequence* inSequence)
+		: mProcedureSequence(inSequence)
+		{}
+		void execute(Visitor* inInterperter)
+		{
+		mProcedureSequence->accept(inInterperter);
+		}
+		};
+		*/
+
+		// Main file
+		mOutputFile << "procedures = {}" << endl;
+		mOutputFile << "characterBuffer = []" << endl;
+		mOutputFile << "pointer = 0" << endl;
+		mOutputFile << "cells = []" << endl;
+		mOutputFile << "for i in range(30000):" << endl;
+		mOutputFile << "    cells.append(0)" << endl;
+
+		// Print out rest of program
+		inNode->mChild->accept(this);
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(ProcedureDefinition* inNode)
+	{
+		// Set this procedures children as the current pointers address
+		mOutputFile << GetTabString() << "procedures[pointer] = lambda:";
+		inNode->mProcedureSequence->accept(this);
+		//mProcedures[mPointer] = new Procedure(inNode->mProcedureSequence);
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(ProcedureInvocation* inNode)
+	{
+		mOutputFile << GetTabString() << "procedures[cells[pointer]]()" << endl;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Repetition* inNode)
+	{
+		mOutputFile << GetTabString() << "for repeatIndex in range(" << inNode->mNumRepeats << "):" << endl;
+		mCurrentTabAmmount++;
+		inNode->mRepeatNode->accept(this);
+		mCurrentTabAmmount--;
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Strings* inNode)
+	{
+		//for (auto currentCharacter : inNode->mString)
+		string::reverse_iterator stringIter;
+		for (stringIter = inNode->mString.rbegin(); stringIter != inNode->mString.rend(); ++stringIter)
+		{
+			char currentCharacter = (*stringIter);
+			mOutputFile << GetTabString() << "characterBuffer.append(\"";
+			if (currentCharacter == '\0')
+				mOutputFile << "\0";
+			else
+				mOutputFile << currentCharacter;
+			mOutputFile << "\")" << endl;
+		}
+	}
+	//----------------------------------------------------------------------------------------------------//
+	void visit(Breakpoint* inNode)
+	{
+		__debugbreak();
+	}
 };
 
 //----------------------------------------------------------------------------------------------------//
@@ -523,7 +688,7 @@ public:
 					numberString.push_back(command);
 					bool bAnotherNumber = true;
 
-					int nextIndex = sourceIndex;
+					unsigned int nextIndex = sourceIndex;
 					while (bAnotherNumber)
 					{
 						if (nextIndex < inSource.size())
@@ -550,8 +715,6 @@ public:
 				break;
 			case '!':
 				sequence.push_back(new Breakpoint());
-				break;
-			case '#':
 				break;
 			case '\"':
 				{
@@ -604,4 +767,6 @@ int main(int argc, char** argv)
 
 	Interpreter* interperter = new Interpreter();
 	program->accept(interperter);
+	Compiler* compiler = new Compiler();
+	compiler->visit(program);
 }
