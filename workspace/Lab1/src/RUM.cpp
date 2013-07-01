@@ -64,11 +64,16 @@ public:
 class Left : public Node
 {
 public:
-	void accept(Visitor* inVisitor)
+	void accept(Visitor* inVisitor);
 	{
 		inVisitor->visit(this);
 	}
 };
+
+void Left::accept(Visitor* inVisitor);
+{
+	inVisitor->visit(this);
+}
 
 //----------------------------------------------------------------------------------------------------//
 class Right : public Node
