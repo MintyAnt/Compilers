@@ -35,6 +35,14 @@ class Printer(object):
             return ""
 		
 #boiler plate code for the Regex lab by mcgeep
+class Printer(object):
+    def visit(self, node):
+        if isinstance(node, EmptySet): return "0"
+        if isinstance(node, EmptyString): return "e"
+        if isinstance(node, Symbol): return node.symbol
+        if isinstance(node, Star): return node.child.accept(self) + "*"
+        if isinstance(node, Sequence): return node.a.accept(self) + node.b.accept(self)
+        if isinstance(node, Or): return node.a.accept(self) + '|' + node.b.accept(self)
 class Nullable(object):
     def visit(self, node):
         if (node == None):
@@ -81,7 +89,7 @@ class Derivative(object):
         if isinstance(node, Symbol):
             if self.c == node.symbol:
                 return EmptyString.GetInstance()
-            else: 
+            else:
                 return EmptySet.GetInstance()
 
         if isinstance(node, Star):

@@ -39,13 +39,13 @@ public class Regex {
 		@Override
 		public String visit(Sequence node) {
 			// TODO Auto-generated method stub
-			return null;
+			return node.a.accept(this) + node.b.accept(this);
 		}
 
 		@Override
 		public String visit(Or node) {
 			// TODO Auto-generated method stub
-			return null;
+			return node.a.accept(this) + '|' + node.b.accept(this);
 		}
 
 	}
@@ -240,6 +240,17 @@ public class Regex {
 		// Does the regex match the empty string?
 		return regex.accept(nullable);
 	}
+	// Match String s literally
+	public static Node fromString(String s) {
+		if (s.length() == 0)
+			return new EmptyString();
+		return new Sequence(new Symbol(s.charAt(0)),
+				fromString(s.substring(1)));
+	}
+	// Create a nested sequence from an array of nodes
+	public static Node seq(Node...s) {
+		return null;
+	}
 	public static void main(String[] args) {
 		String s = "H";
 		s += "ello";
@@ -253,10 +264,7 @@ public class Regex {
 			// ob
 			// b
 			// emptystring
-			Regex.match(
-				new Sequence(new Symbol('b'),
-						new Sequence(new Symbol('o'),
-								new Symbol('b'))), "bob");
+			Regex.match(Regex.fromString("bob"), "bob");
 		System.out.println(System.nanoTime() - then);
 	}
 }

@@ -4,3 +4,4 @@
 *.dll
 **/bin
 **/.metadata
+*.pdb
