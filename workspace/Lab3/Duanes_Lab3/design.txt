@@ -1,0 +1,83 @@
+Optimize
+cl /FAcs /O2 <cpp>
+
+Optimize Autovec
+cl /FAcs /O2 /Qpar /Qpar-report:2 <cpp>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Cool Optimizations:
+- if (false) { }  gets removed (use debugger)
+
+- x = 0 is turned into xor x, x
+
+int x;
+x = 0;
+
+What I expect:
+mov x, 0
+
+What really comes:
+xor x, x
+http://www.nynaeve.net/?p=64
+
+
+- Linking functions
+2 functions do the same shit
+Compiles down to one function
+
+- Static, const strings all point to the same damned one
+
+- Loop Unrolling
+
+- Auto-Vectorization
+
+
+Assembly vs Assembly:
+Show unoptimized assembly against optimized assembly.
+What you expect, too, would be smart
+
+How to use the debugger:
+Show off cool debugger things
+Show off how to jump into assembly
+Show off how to move breakpoint around
+Show off how to keep track of variables
+
+Bypass Optimizations:
+http://msdn.microsoft.com/en-us/library/ms235601.aspx
+
+
+
+
+Part 1.
+
+-
+if (false)
+{
+	inx z = 0;
+	z++;
+}
+
